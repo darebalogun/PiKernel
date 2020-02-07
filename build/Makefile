@@ -1,5 +1,7 @@
 # Cross compiler
-CC = aarch64-none-elf-gcc
+TOOLCHAIN = aarch64-none-elf
+CC = $(TOOLCHAIN)-gcc
+GDB = $(TOOLCHAIN)-gdb
 
 # Directive
 CFLAGS = -ffreestanding 
@@ -19,7 +21,7 @@ OBJECTS += $(patsubst $(COMMON_SRC)/%.c, $(OBJ_DIR)/%.o, $(COMMONSOURCES))
 OBJECTS += $(patsubst $(KER_SRC)/%.S, $(OBJ_DIR)/%.o, $(ASMSOURCES))
 HEADERS = $(wildcard $(KER_HEAD)/*.h)
 
-IMG_NAME = kernel8.img
+IMG_NAME = kernel7.img
 
 build: $(OBJECTS) $(HEADERS)
 	echo $(OBJECTS)
@@ -42,4 +44,15 @@ clean:
 	rm $(IMG_NAME)
 
 run: build
-	qemu-system-aarch64 -M raspi3 -serial stdio -kernel kernel8.img
+	qemu-system-aarch64 -m 1024 -M raspi3 -serial stdio -kernel $(IMG_NAME)
+
+dbg:
+	$(GDB) $(IMG_NAME)
+
+dbgrun: build gdbinit
+	qemu-system-aarch64 -m 1024 -M raspi3 -serial stdio -kernel $(IMG_NAME) -S -s
+
+.PHONY: gdbinit
+gdbinit:
+	echo "target remote localhost:1234" > .gdbinit
+	echo "break kernel_main" >> .gdbinit
