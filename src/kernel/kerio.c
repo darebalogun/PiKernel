@@ -3,6 +3,7 @@
 #include <kernel/gpu.h>
 #include <common/stdlib.h>
 #include <stdarg.h>
+#include <kernel/lfb.h>
 
 char getc(void)
 {
@@ -12,7 +13,6 @@ char getc(void)
 void putc(char c)
 {
     uart_putc(c);
-    //gpu_putc(c);
 }
 
 void puts(const char *str)

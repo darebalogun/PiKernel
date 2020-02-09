@@ -5,6 +5,7 @@
 #include <kernel/mem.h>
 #include <kernel/kerio.h>
 #include <kernel/gpu.h>
+#include <kernel/lfb.h>
 #include <common/stdlib.h>
 
 void int_to_string(uint32_t number, char *str);
@@ -20,9 +21,18 @@ extern "C" /* Use C linkage for kernel_main. */
     (void)r1;
     (void)atags;
 
+    lfb_init();
+    lfb_print(0, 0, "Hello World!\n");
+    /**
     uart_init();
+    puts("uart init complete\n");
+    mem_init((atag_t *)atags);
+    puts("mem init complete\n");
+    //gpu_init();
+    puts("gpu init complete\n");
     puts("Welcome to PiKernel!\r\n");
     puts("Initilizing Memory\n");
+    */
 
     uint32_t mem_size = get_mem_size((atag_t *)atags);
     char mem_size_str[1024];

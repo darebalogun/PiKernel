@@ -2,6 +2,7 @@
 #include <kernel/gpu.h>
 #include <kernel/mem.h>
 #include <kernel/mailbox.h>
+#include <kernel/kerio.h>
 
 int framebuffer_init(void)
 {

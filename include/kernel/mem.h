@@ -6,8 +6,8 @@
 #define MEM_H
 
 #define PAGE_SIZE 4096
-// 16 MB kernel heap
-#define KERNEL_HEAP_SIZE (16 * 1024 * 1024)
+// 4 MB kernel heap
+#define KERNEL_HEAP_SIZE (4 * 1024 * 1024)
 
 typedef struct
 {

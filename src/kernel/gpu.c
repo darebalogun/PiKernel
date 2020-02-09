@@ -66,11 +66,14 @@ void gpu_init(void)
     while (framebuffer_init())
         ;
 
+    puts("start\n");
     // clear screen
     for (uint32_t j = 0; j < fbinfo.height; j++)
     {
+        puts("1\n");
         for (uint32_t i = 0; i < fbinfo.width; i++)
         {
+            puts("2\n");
             write_pixel(i, j, &BLACK);
         }
     }

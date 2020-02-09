@@ -2,6 +2,7 @@
 TOOLCHAIN = aarch64-none-elf
 CC = $(TOOLCHAIN)-gcc
 GDB = $(TOOLCHAIN)-gdb
+LD = $(TOOLCHAIN)-ld
 
 # Directive
 CFLAGS = -ffreestanding 
@@ -21,11 +22,11 @@ OBJECTS += $(patsubst $(COMMON_SRC)/%.c, $(OBJ_DIR)/%.o, $(COMMONSOURCES))
 OBJECTS += $(patsubst $(KER_SRC)/%.S, $(OBJ_DIR)/%.o, $(ASMSOURCES))
 HEADERS = $(wildcard $(KER_HEAD)/*.h)
 
-IMG_NAME = kernel7.img
+IMG_NAME = kernel8.img
 
 build: $(OBJECTS) $(HEADERS)
 	echo $(OBJECTS)
-	$(CC) -T linker.ld -o $(IMG_NAME) $(LFLAGS) $(OBJECTS)
+	$(CC) -T linker.ld -o $(IMG_NAME) $(LFLAGS) $(OBJECTS) $(OBJ_DIR)/font.o
 
 $(OBJ_DIR)/%.o: $(KER_SRC)/%.c
 	mkdir -p $(@D)
@@ -38,6 +39,7 @@ $(OBJ_DIR)/%.o: $(KER_SRC)/%.S
 $(OBJ_DIR)/%.o: $(COMMON_SRC)/%.c
 	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -I$(KER_SRC) -I$(KER_HEAD) -c $< -o $@ $(CSRCFLAGS)
+
 
 clean:
 	rm -rf $(OBJ_DIR)
