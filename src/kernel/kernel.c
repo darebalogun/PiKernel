@@ -21,8 +21,10 @@ extern "C" /* Use C linkage for kernel_main. */
     (void)r1;
     (void)atags;
 
+    //Init functions
     lfb_init();
     lfb_print(0, 0, "Hello World!\n");
+    lfb_print_c(0, 1, 'h');
     /**
     uart_init();
     puts("uart init complete\n");
