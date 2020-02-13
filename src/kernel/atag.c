@@ -1,4 +1,6 @@
 #include <kernel/atag.h>
+#include <common/stdlib.h>
+#include <kernel/lfb.h>
 
 // Return the size of memory available, using atag info from bootloader
 uint32_t get_mem_size(atag_t *tag)

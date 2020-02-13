@@ -4,7 +4,6 @@
 #include <kernel/atag.h>
 #include <kernel/mem.h>
 #include <kernel/kerio.h>
-#include <kernel/gpu.h>
 #include <kernel/lfb.h>
 #include <common/stdlib.h>
 
@@ -14,26 +13,23 @@ void int_to_string(uint32_t number, char *str);
 extern "C" /* Use C linkage for kernel_main. */
 #endif
     void
-    main(uint32_t r0, uint32_t r1, uint32_t atags)
+    main(uint32_t r0, uint32_t r1, uint32_t r2)
 {
-    // Declare as unused
-    (void)r0;
-    (void)r1;
-    (void)atags;
+    uint32_t atags;
+    if (r0 == 0)
+    { // device tree disabled
+        atags = 0x100;
+    }
 
     //Init functions
     lfb_init();
     lfb_print("Welcome to PiKernel!\n");
+    lfb_print("Initializing UART...\n");
     uart_init();
     lfb_print("UART Init complete\n");
+    lfb_print("Initializing memory...\n");
     mem_init((atag_t *)atags);
     lfb_print("Memory init complete\n");
-
-    uint32_t mem_size = get_mem_size((atag_t *)atags);
-    char mem_size_str[1024];
-    int_to_string(mem_size, mem_size_str);
-    lfb_print(mem_size_str);
-    lfb_print(" bytes of memory available!\n");
 
     while (1)
     {

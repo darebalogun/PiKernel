@@ -3,13 +3,14 @@
 #include <common/stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <kernel/lfb.h>
 
 /**
  * Heap Stuff
  */
 static void heap_init(uint32_t heap_start);
 /**
- * impliment kmalloc as a linked list of allocated segments.
+ * impliment malloc as a linked list of allocated segments.
  * Segments should be 4 byte aligned.
  * Use best fit algorithm to find an allocation
  */
@@ -42,7 +43,13 @@ void mem_init(atag_t *atags)
 
     // Get the total number of pages
     mem_size = get_mem_size(atags);
+    lfb_print(itoa(mem_size, 10));
+    lfb_print(" bytes of memory available\n");
+
     num_pages = mem_size / PAGE_SIZE;
+
+    lfb_print(itoa(num_pages, 10));
+    lfb_print(" pages of memory at 4KB each\n");
 
     // Allocate space for all those pages' metadata.  Start this block just after the kernel image is finished
     page_array_len = sizeof(page_t) * num_pages;
@@ -119,7 +126,7 @@ static void heap_init(uint32_t heap_start)
     heap_segment_list_head->segment_size = KERNEL_HEAP_SIZE;
 }
 
-void *kmalloc(uint32_t bytes)
+void *malloc(uint32_t bytes)
 {
     heap_segment_t *curr, *best = NULL;
     int diff, best_diff = 0x7fffffff; // Max signed int
@@ -162,7 +169,7 @@ void *kmalloc(uint32_t bytes)
     return best + 1;
 }
 
-void kfree(void *ptr)
+void free(void *ptr)
 {
     heap_segment_t *seg;
 

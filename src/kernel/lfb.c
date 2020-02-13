@@ -23,7 +23,6 @@
  *
  */
 
-#include <kernel/kerio.h>
 #include <kernel/mbox.h>
 #include <common/stdlib.h>
 
