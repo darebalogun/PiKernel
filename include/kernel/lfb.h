@@ -24,4 +24,5 @@
  */
 
 void lfb_init();
-void lfb_print(int x, int y, char *s);
+void lfb_print(char *s);
+void lfb_print_c(char c);

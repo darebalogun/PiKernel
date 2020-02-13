@@ -25,6 +25,9 @@
 
 #include <kernel/kerio.h>
 #include <kernel/mbox.h>
+#include <common/stdlib.h>
+
+static unsigned int x, y;
 
 /* PC Screen Font as used by Linux Console */
 typedef struct
@@ -109,10 +112,14 @@ void lfb_init()
     }
 }
 
-void lfb_print(int x, int y, char *s)
+// 1024 / 16 (width/font width) in pixels
+static char linebuff[64];
+
+void lfb_print(char *s)
 {
-    // get our font
+    // Font
     psf_t *font = (psf_t *)&_binary_font_psf_start;
+
     // draw next character if it's not zero
     while (*s)
     {
@@ -161,9 +168,12 @@ void lfb_print(int x, int y, char *s)
     }
 }
 
-void lfb_print_c(int x, int y, char c)
+void lfb_print_c(char c)
 {
+
+    // Font
     psf_t *font = (psf_t *)&_binary_font_psf_start;
+
     unsigned char *glyph = (unsigned char *)&_binary_font_psf_start +
                            font->headersize + (*((unsigned char *)c) < font->numglyph ? c : 0) * font->bytesperglyph;
     // calculate the offset on screen
@@ -173,14 +183,27 @@ void lfb_print_c(int x, int y, char c)
     // handle carrige return
     if (c == '\r')
     {
-        x = 0;
-    }
-    else
-        // new line
-        if (c == '\n')
-    {
+        for (int i = 0; i <= x; i++)
+        {
+            linebuff[x] = 0;
+        }
         x = 0;
         y++;
+    }
+    else if (c == '\n')
+    {
+        for (int i = 0; i <= x; i++)
+        {
+            linebuff[x] = 0;
+        }
+        x = 0;
+        y++;
+    }
+    else if (c == '\b')
+    {
+        x--;
+        lfb_print_c(' ');
+        x--;
     }
     else
     {

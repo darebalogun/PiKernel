@@ -1,9 +1,6 @@
 .section ".text.boot"
 
-.globl _start
-
-    // 0x80000 for 64 bit mode and 0x8000 for 32 bit mode
-    .org 0x80000
+.global _start
 
 _start:
     // read cpu id, stop slave cores
@@ -27,6 +24,6 @@ _start:
     cbnz    w2, 3b
 
     // jump to C code
-4:  bl      kernel_main
+4:  bl      main
     // for failsafe, halt this core too
-    b 1b
+    b       1b

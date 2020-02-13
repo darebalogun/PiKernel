@@ -3,11 +3,12 @@ TOOLCHAIN = aarch64-none-elf
 CC = $(TOOLCHAIN)-gcc
 GDB = $(TOOLCHAIN)-gdb
 LD = $(TOOLCHAIN)-ld
+COPY = $(TOOLCHAIN)-objcopy
 
 # Directive
-CFLAGS = -ffreestanding 
-CSRCFLAGS = -O2 -Wall -Wextra
-LFLAGS = -ffreestanding -O2 -nostdlib
+CFLAGS = -ffreestanding -Wall -O2 -fno-stack-protector -nostartfiles
+CSRCFLAGS = -Wall -Wextra
+LFLAGS = -nostdlib -nostartfiles
 
 # Location of the files
 KER_SRC = ../src/kernel
@@ -22,11 +23,12 @@ OBJECTS += $(patsubst $(COMMON_SRC)/%.c, $(OBJ_DIR)/%.o, $(COMMONSOURCES))
 OBJECTS += $(patsubst $(KER_SRC)/%.S, $(OBJ_DIR)/%.o, $(ASMSOURCES))
 HEADERS = $(wildcard $(KER_HEAD)/*.h)
 
-IMG_NAME = kernel8.img
+IMG_NAME = kernel8.elf
 
 build: $(OBJECTS) $(HEADERS)
 	echo $(OBJECTS)
-	$(CC) -T linker.ld -o $(IMG_NAME) $(LFLAGS) $(OBJECTS) $(OBJ_DIR)/font.o
+	$(CC) -T linker.ld -o $(IMG_NAME) $(LFLAGS) $(OBJECTS) font.o
+	$(COPY) $(IMG_NAME) -O binary kernel8.img
 
 $(OBJ_DIR)/%.o: $(KER_SRC)/%.c
 	mkdir -p $(@D)
@@ -46,13 +48,13 @@ clean:
 	rm $(IMG_NAME)
 
 run: build
-	qemu-system-aarch64 -m 1024 -M raspi3 -serial stdio -kernel $(IMG_NAME)
+	qemu-system-aarch64 -M raspi3 -serial stdio -kernel kernel8.img
 
 dbg:
 	$(GDB) $(IMG_NAME)
 
 dbgrun: build gdbinit
-	qemu-system-aarch64 -m 1024 -M raspi3 -serial stdio -kernel $(IMG_NAME) -S -s
+	qemu-system-aarch64 -M raspi3 -serial stdio -kernel $(IMG_NAME) -S -s
 
 .PHONY: gdbinit
 gdbinit:

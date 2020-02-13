@@ -14,7 +14,7 @@ void int_to_string(uint32_t number, char *str);
 extern "C" /* Use C linkage for kernel_main. */
 #endif
     void
-    kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
+    main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
     // Declare as unused
     (void)r0;
@@ -23,28 +23,21 @@ extern "C" /* Use C linkage for kernel_main. */
 
     //Init functions
     lfb_init();
-    lfb_print(0, 0, "Hello World!\n");
-    lfb_print_c(0, 1, 'h');
-    /**
+    lfb_print("Welcome to PiKernel!\n");
     uart_init();
-    puts("uart init complete\n");
+    lfb_print("UART Init complete\n");
     mem_init((atag_t *)atags);
-    puts("mem init complete\n");
-    //gpu_init();
-    puts("gpu init complete\n");
-    puts("Welcome to PiKernel!\r\n");
-    puts("Initilizing Memory\n");
-    */
+    lfb_print("Memory init complete\n");
 
     uint32_t mem_size = get_mem_size((atag_t *)atags);
     char mem_size_str[1024];
     int_to_string(mem_size, mem_size_str);
-    uart_puts(mem_size_str);
+    lfb_print(mem_size_str);
+    lfb_print(" bytes of memory available!\n");
 
     while (1)
     {
-        uart_putc(uart_getc());
-        uart_putc('\n');
+        lfb_print_c(uart_getc());
     }
 }
 

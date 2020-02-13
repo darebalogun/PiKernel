@@ -4,7 +4,7 @@
 uint32_t get_mem_size(atag_t *tag)
 {
     // Qemu does not emulate bootloader but we can set qemu mem to 1024MB
-    return 1024 * 1024 * 1024;
+    // return 1024 * 1024 * 1024;
     while (tag->tag != NONE)
     {
         if (tag->tag == MEM)
