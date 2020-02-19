@@ -6,6 +6,7 @@
 #include <kernel/kerio.h>
 #include <kernel/lfb.h>
 #include <common/stdlib.h>
+#include <kernel/timer.h>
 
 void int_to_string(uint32_t number, char *str);
 
@@ -30,6 +31,9 @@ extern "C" /* Use C linkage for kernel_main. */
     lfb_print("Initializing memory...\n");
     mem_init((atag_t *)atags);
     lfb_print("Memory init complete\n");
+    timer_init(1000);
+    enable_timer_irq();
+    lfb_print("Timer init complete!\n");
 
     while (1)
     {

@@ -26,7 +26,6 @@ HEADERS = $(wildcard $(KER_HEAD)/*.h)
 IMG_NAME = kernel8.elf
 
 build: $(OBJECTS) $(HEADERS)
-	echo $(OBJECTS)
 	$(CC) -T linker.ld -o $(IMG_NAME) $(LFLAGS) $(OBJECTS) font.o
 	$(COPY) $(IMG_NAME) -O binary kernel8.img
 
