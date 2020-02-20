@@ -1,84 +1,114 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <kernel/uart.h>
+#include <kernel/mbox.h>
 
-void mmio_write(uint32_t reg, uint32_t data)
-{
-    *(volatile uint32_t *)reg = data;
-}
-
-uint32_t mmio_read(uint32_t reg)
-{
-    return *(volatile uint32_t *)reg;
-}
-
-// Loop <delay> times in a way that the compiler won't optimize away
-void delay(int32_t count)
-{
-    asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
-                 : "=r"(count)
-                 : [count] "0"(count)
-                 : "cc");
-}
-
+/**
+ * Set baud rate and characteristics (115200 8N1) and map to GPIO
+ */
 void uart_init()
 {
-    // Disable UART0
-    mmio_write(UART0_CR, 0x00000000);
+    register unsigned int r;
 
-    //Setup the GPIO pin 14 && 15
+    /* initialize UART */
+    *UART0_CR = 0; // turn off UART0
 
-    // Disable pull up/down for all GPIO pins & delay for 150 cucles
-    mmio_write(GPPUD, 0x00000000);
-    delay(150);
+    /* set up clock for consistent divisor values */
+    mbox[0] = 9 * 4;
+    mbox[1] = MBOX_REQUEST;
+    mbox[2] = MBOX_TAG_SETCLKRATE; // set clock rate
+    mbox[3] = 12;
+    mbox[4] = 8;
+    mbox[5] = 2;       // UART clock
+    mbox[6] = 4000000; // 4Mhz
+    mbox[7] = 0;       // clear turbo
+    mbox[8] = MBOX_TAG_LAST;
+    mbox_call(MBOX_CH_PROP);
 
-    // Write 0 to GPPUDCLK0 to make it take effect.
-    mmio_write(GPPUDCLK0, 0x00000000);
-
-    // Clear pending interrupts.
-    mmio_write(UART0_ICR, 0x7FF);
-
-    // Set integer & fractional part of baud rate.
-    // Divider = UART_CLOCK/(16 * Baud)
-    // Fraction part register = (Fractional part * 64) + 0.5
-    // UART_CLOCK = 3000000; Baud = 115200.
-
-    // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
-    mmio_write(UART0_IBRD, 1);
-    // Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
-    mmio_write(UART0_FBRD, 40);
-
-    // Enable FIFO & 8 bit data transmission (1 stop bit, no parity).
-    mmio_write(UART0_LCRH, (1 << 4) | (1 << 5) | (1 << 6));
-
-    // Mask all interrupts.
-    mmio_write(UART0_IMSC, (1 << 1) | (1 << 4) | (1 << 5) | (1 << 6) |
-                               (1 << 7) | (1 << 8) | (1 << 9) | (1 << 10));
-
-    // Enable UART0, receive & transfer part of UART.
-    mmio_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
-}
-
-void uart_putc(unsigned char c)
-{
-    // Wait for UART to become ready to transmit.
-    while (mmio_read(UART0_FR) & (1 << 5))
+    /* map UART0 to GPIO pins */
+    r = *GPFSEL1;
+    r &= ~((7 << 12) | (7 << 15)); // gpio14, gpio15
+    r |= (4 << 12) | (4 << 15);    // alt0
+    *GPFSEL1 = r;
+    *GPPUD = 0; // enable pins 14 and 15
+    r = 150;
+    while (r--)
     {
+        asm volatile("nop");
     }
-    mmio_write(UART0_DR, c);
-}
-
-unsigned char uart_getc()
-{
-    // Wait for UART to have received something.
-    while (mmio_read(UART0_FR) & (1 << 4))
+    *GPPUDCLK0 = (1 << 14) | (1 << 15);
+    r = 150;
+    while (r--)
     {
+        asm volatile("nop");
     }
-    return mmio_read(UART0_DR);
+    *GPPUDCLK0 = 0; // flush GPIO setup
+
+    *UART0_ICR = 0x7FF; // clear interrupts
+    *UART0_IBRD = 2;    // 115200 baud
+    *UART0_FBRD = 0xB;
+    *UART0_LCRH = 0b11 << 5; // 8n1
+    *UART0_CR = 0x301;       // enable Tx, Rx, FIFO
 }
 
-void uart_puts(const char *str)
+/**
+ * Send a character
+ */
+void uart_send(unsigned int c)
 {
-    for (size_t i = 0; str[i] != '\0'; i++)
-        uart_putc((unsigned char)str[i]);
+    /* wait until we can send */
+    do
+    {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x20);
+    /* write the character to the buffer */
+    *UART0_DR = c;
+}
+
+/**
+ * Receive a character
+ */
+char uart_getc()
+{
+    char r;
+    /* wait until something is in the buffer */
+    do
+    {
+        asm volatile("nop");
+    } while (*UART0_FR & 0x10);
+    /* read it and return */
+    r = (char)(*UART0_DR);
+    /* convert carrige return to newline */
+    return r == '\r' ? '\n' : r;
+}
+
+/**
+ * Display a string
+ */
+void uart_puts(char *s)
+{
+    while (*s)
+    {
+        /* convert newline to carrige return + newline */
+        if (*s == '\n')
+            uart_send('\r');
+        uart_send(*s++);
+    }
+}
+
+/**
+ * Display a binary value in hexadecimal
+ */
+void uart_hex(unsigned int d)
+{
+    unsigned int n;
+    int c;
+    for (c = 28; c >= 0; c -= 4)
+    {
+        // get highest tetrad
+        n = (d >> c) & 0xF;
+        // 0-9 => '0'-'9', 10-15 => 'A'-'F'
+        n += n > 9 ? 0x37 : 0x30;
+        uart_send(n);
+    }
 }

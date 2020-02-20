@@ -8,6 +8,26 @@
 #define MAILBOX_OFFSET 0xB880
 #define UART0_OFFSET 0x201000
 #define GPIO_OFFSET 0x200000
+#define GPIO_BASE (PERIPHERAL_BASE + GPIO_OFFSET)
+
+#define GPFSEL0 ((volatile unsigned int *)(GPIO_BASE + 0x00000000))
+#define GPFSEL1 ((volatile unsigned int *)(GPIO_BASE + 0x00000004))
+#define GPFSEL2 ((volatile unsigned int *)(GPIO_BASE + 0x00000008))
+#define GPFSEL3 ((volatile unsigned int *)(GPIO_BASE + 0x0000000C))
+#define GPFSEL4 ((volatile unsigned int *)(GPIO_BASE + 0x00000010))
+#define GPFSEL5 ((volatile unsigned int *)(GPIO_BASE + 0x00000014))
+#define GPSET0 ((volatile unsigned int *)(GPIO_BASE + 0x0000001C))
+#define GPSET1 ((volatile unsigned int *)(GPIO_BASE + 0x00000020))
+#define GPCLR0 ((volatile unsigned int *)(GPIO_BASE + 0x00000028))
+#define GPLEV0 ((volatile unsigned int *)(GPIO_BASE + 0x00000034))
+#define GPLEV1 ((volatile unsigned int *)(GPIO_BASE + 0x00000038))
+#define GPEDS0 ((volatile unsigned int *)(GPIO_BASE + 0x00000040))
+#define GPEDS1 ((volatile unsigned int *)(GPIO_BASE + 0x00000044))
+#define GPHEN0 ((volatile unsigned int *)(GPIO_BASE + 0x00000064))
+#define GPHEN1 ((volatile unsigned int *)(GPIO_BASE + 0x00000068))
+#define GPPUD ((volatile unsigned int *)(GPIO_BASE + 0x00000094))
+#define GPPUDCLK0 ((volatile unsigned int *)(GPIO_BASE + 0x00000098))
+#define GPPUDCLK1 ((volatile unsigned int *)(GPIO_BASE + 0x0000009C))
 
 #define SYSTEM_TIMER_OFFSET 0x3000
 #define INTERRUPTS_OFFSET 0xB000
