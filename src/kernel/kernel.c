@@ -8,8 +8,6 @@
 #include <common/stdlib.h>
 #include <kernel/timer.h>
 
-void int_to_string(uint32_t number, char *str);
-
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
 #endif

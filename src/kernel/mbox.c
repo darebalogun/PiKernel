@@ -24,12 +24,12 @@
  *
  */
 
-#include <kernel/gpio.h>
+#include <kernel/peripheral.h>
 
 /* mailbox message buffer */
 volatile unsigned int __attribute__((aligned(16))) mbox[36];
 
-#define VIDEOCORE_MBOX (MMIO_BASE + 0x0000B880)
+#define VIDEOCORE_MBOX (PERIPHERAL_BASE + 0x0000B880)
 #define MBOX_READ ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x0))
 #define MBOX_POLL ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x10))
 #define MBOX_SENDER ((volatile unsigned int *)(VIDEOCORE_MBOX + 0x14))

@@ -2,7 +2,7 @@
 #include <common/stdlib.h>
 #include <kernel/lfb.h>
 
-// Return the size of memory available, using atag info from bootloader
+// Loop through atags to find memory atag
 uint32_t get_mem_size(atag_t *tag)
 {
     // Qemu does not emulate bootloader but we can set qemu mem to 1024MB
@@ -14,7 +14,7 @@ uint32_t get_mem_size(atag_t *tag)
             // To test on actual hardware
             return tag->mem.size;
         }
-        tag = ((uint32_t *)tag) + tag->tag_size;
+        tag = ((uint64_t *)tag) + tag->tag_size;
     }
     return 0;
 }

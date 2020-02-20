@@ -25,6 +25,7 @@
 
 #include <kernel/mbox.h>
 #include <common/stdlib.h>
+#include <kernel/kerio.h>
 
 static unsigned int x, y;
 
@@ -128,7 +129,7 @@ void lfb_print(char *s)
         // calculate the offset on screen
         int offs = (y * font->height * pitch) + (x * (font->width + 1) * 4);
         // variables
-        int i, j, line, mask, bytesperline = (font->width + 7) / 8;
+        unsigned int i, j, line, mask, bytesperline = (font->width + 7) / 8;
         // handle carrige return
         if (*s == '\r')
         {
@@ -174,15 +175,15 @@ void lfb_print_c(char c)
     psf_t *font = (psf_t *)&_binary_font_psf_start;
 
     unsigned char *glyph = (unsigned char *)&_binary_font_psf_start +
-                           font->headersize + (*((unsigned char *)c) < font->numglyph ? c : 0) * font->bytesperglyph;
+                           font->headersize + (*((unsigned char *)(uint64_t)c) < font->numglyph ? c : 0) * font->bytesperglyph;
     // calculate the offset on screen
     int offs = (y * font->height * pitch) + (x * (font->width + 1) * 4);
     // variables
-    int i, j, line, mask, bytesperline = (font->width + 7) / 8;
+    unsigned int i, j, line, mask, bytesperline = (font->width + 7) / 8;
     // handle carrige return
     if (c == '\r')
     {
-        for (int i = 0; i <= x; i++)
+        for (unsigned int i = 0; i <= x; i++)
         {
             linebuff[x] = 0;
         }
@@ -191,7 +192,7 @@ void lfb_print_c(char c)
     }
     else if (c == '\n')
     {
-        for (int i = 0; i <= x; i++)
+        for (unsigned int i = 0; i <= x; i++)
         {
             linebuff[x] = 0;
         }

@@ -3,7 +3,7 @@
 #define ATAG_H
 typedef enum
 {
-    // RaspberryPi tags
+    // Atags used in raspberry pi
     NONE = 0x00000000,
     CORE = 0x54410001,
     MEM = 0x54410002,
