@@ -26,7 +26,7 @@ extern "C" /* Use C linkage for kernel_main. */
 
     printf("Initializing UART...\n");
     uart_init();
-    printf("UART Init complete\n");
+    printf("UART init complete\n");
 
     printf("Initializing memory...\n");
     mem_init((atag_t *)atags);

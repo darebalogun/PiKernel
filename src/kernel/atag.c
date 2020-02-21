@@ -1,6 +1,6 @@
 #include <kernel/atag.h>
 #include <common/stdlib.h>
-#include <kernel/lfb.h>
+#include <kernel/kerio.h>
 
 // Loop through atags to find memory atag
 uint32_t get_mem_size(atag_t *tag)
@@ -14,7 +14,7 @@ uint32_t get_mem_size(atag_t *tag)
             // To test on actual hardware
             return tag->mem.size;
         }
-        tag = ((uint64_t *)tag) + tag->tag_size;
+        tag = ((uint32_t *)tag) + tag->tag_size;
     }
     return 0;
 }
