@@ -11,7 +11,7 @@ char getc(void)
 
 void putc(char c)
 {
-    uart_send(c);
+    lfb_print_c(c);
 }
 
 void puts(const char *str)

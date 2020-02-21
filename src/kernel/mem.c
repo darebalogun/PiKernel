@@ -3,7 +3,7 @@
 #include <common/stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <kernel/lfb.h>
+#include <kernel/kerio.h>
 
 /**
  * Heap Stuff
@@ -43,13 +43,10 @@ void mem_init(atag_t *atags)
 
     // Get the total number of pages
     mem_size = get_mem_size(atags);
-    lfb_print(itoa(mem_size, 10));
-    lfb_print(" bytes of memory available\n");
+    printf("%d bytes of memory available\n", mem_size);
 
     num_pages = mem_size / PAGE_SIZE;
-
-    lfb_print(itoa(num_pages, 10));
-    lfb_print(" pages of memory at 4KB each\n");
+    printf("%d pages of memory at 4KB each\n", num_pages);
 
     // Allocate space for all those pages' metadata.  Start this block just after the kernel image is finished
     page_array_len = sizeof(page_t) * num_pages;

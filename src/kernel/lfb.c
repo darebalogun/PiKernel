@@ -1,3 +1,4 @@
+// Modified by Dare Balogun (C) 2020
 /*
  * Copyright (C) 2018 bzt (bztsrc@github)
  *
@@ -27,7 +28,9 @@
 #include <common/stdlib.h>
 #include <kernel/kerio.h>
 
-static unsigned int x, y;
+static unsigned int x, y, numrows, numcolumns;
+static char *screenbuff;
+static int index;
 
 /* PC Screen Font as used by Linux Console */
 typedef struct
@@ -52,6 +55,8 @@ unsigned char *lfb;                /* raw frame buffer address */
  */
 void lfb_init()
 {
+    psf_t *font = (psf_t *)&_binary_font_psf_start;
+
     mbox[0] = 35 * 4;
     mbox[1] = MBOX_REQUEST;
 
@@ -105,6 +110,12 @@ void lfb_init()
         height = mbox[6];       //get actual physical height
         pitch = mbox[33];       //get number of bytes per line
         lfb = (void *)((unsigned long)mbox[28]);
+
+        numrows = height / font->height;
+        numcolumns = width / font->width;
+
+        char screenbuffer[numrows * numcolumns];
+        screenbuff = screenbuffer;
     }
     else
     {
@@ -112,57 +123,12 @@ void lfb_init()
     }
 }
 
-// 1024 / 16 (width/font width) in pixels
-static char linebuff[64];
-
 void lfb_print(char *s)
 {
-    // Font
-    psf_t *font = (psf_t *)&_binary_font_psf_start;
-
     // draw next character if it's not zero
     while (*s)
     {
-        // get the offset of the glyph. Need to adjust this to support unicode table
-        unsigned char *glyph = (unsigned char *)&_binary_font_psf_start +
-                               font->headersize + (*((unsigned char *)s) < font->numglyph ? *s : 0) * font->bytesperglyph;
-        // calculate the offset on screen
-        int offs = (y * font->height * pitch) + (x * (font->width + 1) * 4);
-        // variables
-        unsigned int i, j, line, mask, bytesperline = (font->width + 7) / 8;
-        // handle carrige return
-        if (*s == '\r')
-        {
-            x = 0;
-        }
-        else
-            // new line
-            if (*s == '\n')
-        {
-            x = 0;
-            y++;
-        }
-        else
-        {
-            // display a character
-            for (j = 0; j < font->height; j++)
-            {
-                // display one row
-                line = offs;
-                mask = 1 << (font->width - 1);
-                for (i = 0; i < font->width; i++)
-                {
-                    // if bit set, we use white color, otherwise black
-                    *((unsigned int *)(lfb + line)) = ((int)*glyph) & mask ? 0xFFFFFF : 0;
-                    mask >>= 1;
-                    line += 4;
-                }
-                // adjust to next line
-                glyph += bytesperline;
-                offs += pitch;
-            }
-            x++;
-        }
+        lfb_print_c(*s);
         // next character
         s++;
     }
@@ -170,32 +136,64 @@ void lfb_print(char *s)
 
 void lfb_print_c(char c)
 {
+    if (y == numrows - 1)
+    {
+        screenbuff[index] = 0;
+        char *tmpbuf;
+
+        for (int j = 0; j < numrows * numcolumns; j++)
+        {
+            tmpbuf[j] = screenbuff[j];
+            screenbuff[j] = 0;
+            if (tmpbuf[j] == 0)
+            {
+                break;
+            }
+        }
+
+        x = 0;
+        y = 0;
+        index = 0;
+        int i;
+        for (i = 0; i < numcolumns * numrows; i++)
+        {
+            if (tmpbuf[i] == '\n')
+            {
+                break;
+            }
+        }
+
+        for (; i <= numcolumns * numrows; i++)
+        {
+            lfb_print_c(tmpbuf[i]);
+            if (tmpbuf[i] == 0)
+            {
+                break;
+            }
+        }
+    }
 
     // Font
     psf_t *font = (psf_t *)&_binary_font_psf_start;
 
     unsigned char *glyph = (unsigned char *)&_binary_font_psf_start +
-                           font->headersize + (*((unsigned char *)(uint64_t)c) < font->numglyph ? c : 0) * font->bytesperglyph;
+                           font->headersize + (*((unsigned char *)(uint64_t)&c) < font->numglyph ? c : 0) * font->bytesperglyph;
     // calculate the offset on screen
     int offs = (y * font->height * pitch) + (x * (font->width + 1) * 4);
     // variables
     unsigned int i, j, line, mask, bytesperline = (font->width + 7) / 8;
+
+    // Save to buffer
+    screenbuff[index++] = c;
+
     // handle carrige return
     if (c == '\r')
     {
-        for (unsigned int i = 0; i <= x; i++)
-        {
-            linebuff[x] = 0;
-        }
         x = 0;
         y++;
     }
     else if (c == '\n')
     {
-        for (unsigned int i = 0; i <= x; i++)
-        {
-            linebuff[x] = 0;
-        }
         x = 0;
         y++;
     }

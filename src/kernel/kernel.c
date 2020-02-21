@@ -22,21 +22,24 @@ extern "C" /* Use C linkage for kernel_main. */
 
     //Init functions
     lfb_init();
-    lfb_print("Welcome to PiKernel!\n");
-    lfb_print("Initializing UART...\n");
+    printf("Welcome to PiKernel!\n");
+
+    printf("Initializing UART...\n");
     uart_init();
-    lfb_print("UART Init complete\n");
-    lfb_print("Initializing memory...\n");
+    printf("UART Init complete\n");
+
+    printf("Initializing memory...\n");
     mem_init((atag_t *)atags);
-    lfb_print("Memory init complete\n");
+    printf("Memory init complete\n");
+
     //timer_init(1000);
     //enable_timer_irq();
-    lfb_print("Timer init complete!\n");
+    printf("Timer init complete!\n");
 
     while (1)
     {
         char c = uart_getc();
-        lfb_print(&c);
+        putc(c);
         uart_send(c);
     }
 }

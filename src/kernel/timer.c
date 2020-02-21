@@ -1,6 +1,6 @@
 #include <stdint.h>
 #include <common/stdlib.h>
-#include <kernel/lfb.h>
+#include <kernel/kerio.h>
 #include <kernel/peripheral.h>
 #include <kernel/mbox.h>
 #include <kernel/timer.h>
@@ -11,8 +11,7 @@ unsigned int curVal = 0;
 void timer_init(uint32_t period_ms)
 {
     unsigned long int divisor;
-    // Make sure clock is stopped, illegal to change anything while running
-    // Get GPU clock (it varies between 200-450Mhz)
+    // Get GPU clock with mbox call
     *ARMTIMER_CONTROL &= ~(RPI_ARMTIMER_CTRL_ENABLE);
 
     mbox[0] = (5 + 3) * 4;  // length of the message
@@ -31,18 +30,14 @@ void timer_init(uint32_t period_ms)
     // send the message to the GPU and receive answer
     if (mbox_call(MBOX_CH_PROP))
     {
-
-        lfb_print("\nclock freq: ");
-        lfb_print(itoa(mbox[6], 10));
-        lfb_print("\n");
+        printf("Clock frequency: %d \n", mbox[6]);
 
         // The prescaler divider is set to 250 (based on GPU=250MHz to give 1Mhz clock)
         mbox[6] /= 250;
+
         // Divisor we would need at current clock speed
         divisor = ((unsigned long int)period_in_us * mbox[6]) / 1000000;
-        lfb_print("\nclock divisor: ");
-        lfb_print(itoa(divisor, 10));
-        lfb_print("\n");
+        printf("Clock divisor: %d \n", divisor);
 
         // Enable the timer interrupt IRQ
         *IRQ_ENABLE_BASIC_IRQS |= SYSTEM_TIMER_IRQ_0;
@@ -51,19 +46,19 @@ void timer_init(uint32_t period_ms)
         *ARMTIMER_LOAD = divisor;
 
         *ARMTIMER_CONTROL |= RPI_ARMTIMER_CTRL_23BIT | RPI_ARMTIMER_CTRL_PRESCALE_1 | RPI_ARMTIMER_CTRL_IRQ_ENABLE | RPI_ARMTIMER_CTRL_ENABLE;
-        lfb_print("irq_setup finished. Control: ");
-        lfb_print(itoa(*ARMTIMER_CONTROL, 16));
-        lfb_print("\n");
+        printf("Arm Timer Control: %x \n", *ARMTIMER_CONTROL);
     }
 }
 
 void enable_timer_irq(void)
 {
+    // Enable interrupts globally
     asm volatile("msr daifclr,#2");
 }
 
 void timer_handler(void)
 {
+    // Clear pending interrupt
     *ARMTIMER_ACQ = 1;
-    lfb_print("Timer went off!\n");
+    printf("Timer went off!\n");
 }
