@@ -15,6 +15,7 @@
 #define ARMTIMER_ACQ ((volatile unsigned int *)(PERIPHERAL_BASE + 0xB40C))
 
 void timer_init(uint32_t period_ms);
-void enable_timer_irq(void);
+void enable_interrupts(void);
+void disable_interrupts(void);
 
 #endif /*_TIMER_H */

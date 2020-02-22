@@ -83,6 +83,22 @@ _start:
     // for failsafe, halt this core too
     b       1b
 
+.globl switch_process
+
+//switch_process(proc_ctrl_blk_t *old, proc_ctrl_blk_t *new);
+switch_process:
+    // Store the link register onto the stack
+    str     x30, [sp, #-16]!
+    bl      pushregs
+    mov     x4, sp
+    str     x4, [x0]
+
+    ldr     x5, [x1]
+    mov     sp, x5
+    bl      popregs
+    ldr     x30, [sp], #16
+    ret
+
     // save registers before we call any C code
 pushregs:
 
@@ -154,9 +170,7 @@ _vectors:
     // Timer interrupts happen here
     // We save registers handle the interrupt and pop registers
     .align  7
-    bl      pushregs
     bl      timer_handler
-    bl      popregs
     eret
 
     // FIQ
@@ -168,3 +182,7 @@ _vectors:
     .align  7
 
     eret
+
+  
+
+

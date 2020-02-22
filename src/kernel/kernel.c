@@ -7,12 +7,22 @@
 #include <kernel/lfb.h>
 #include <common/stdlib.h>
 #include <kernel/timer.h>
+#include <kernel/pcb.h>
+#include <kernel/utils.h>
 
 #if defined(__cplusplus)
-extern "C" /* Use C linkage for kernel_main. */
+extern "C" /* Use C linkage for main. */
 #endif
+
     void
-    main(uint32_t r0, uint32_t r1, uint32_t r2)
+    test(void)
+{
+    while (1)
+    {
+        printf("test\n");
+    }
+}
+void main(uint32_t r0, uint32_t r1, uint32_t r2)
 {
     uint32_t atags;
     if (r0 == 0)
@@ -26,20 +36,28 @@ extern "C" /* Use C linkage for kernel_main. */
 
     printf("Initializing UART...\n");
     uart_init();
-    printf("UART init complete\n");
+    printf("UART init complete!\n");
 
     printf("Initializing memory...\n");
     mem_init((atag_t *)atags);
-    printf("Memory init complete\n");
+    printf("Memory init complete!\n");
+
+    process_init();
+    //schedule();
 
     timer_init(1000);
-    enable_timer_irq();
+    enable_interrupts();
+
+    create_process(test, "Test", 4);
     printf("Timer init complete!\n");
 
+    printf("main");
     while (1)
     {
-        char c = uart_getc();
-        putc(c);
-        uart_send(c);
+        printf("1 \n");
+        for (int i = 0; i < 10000000; i++)
+        {
+            asm volatile("nop");
+        }
     }
 }

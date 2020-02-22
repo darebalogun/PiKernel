@@ -4,6 +4,7 @@
 #include <kernel/peripheral.h>
 #include <kernel/mbox.h>
 #include <kernel/timer.h>
+#include <kernel/pcb.h>
 
 const unsigned int interval = 200000;
 unsigned int curVal = 0;
@@ -50,10 +51,15 @@ void timer_init(uint32_t period_ms)
     }
 }
 
-void enable_timer_irq(void)
+void enable_interrupts(void)
 {
     // Enable interrupts globally
     asm volatile("msr daifclr,#2");
+}
+
+void disable_interrupts(void)
+{
+    asm volatile("msr daifset,#2");
 }
 
 void timer_handler(void)
@@ -61,4 +67,5 @@ void timer_handler(void)
     // Clear pending interrupt
     *ARMTIMER_ACQ = 1;
     printf("Timer went off!\n");
+    schedule();
 }
